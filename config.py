@@ -23,16 +23,23 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = 86400  # 24 hours
     
     # Database configuration
-    # Check if running on Render with persistent disk
-    if os.path.exists('/data'):
-        # Production with persistent disk
-        SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:////data/database.db')
-        UPLOAD_FOLDER = '/data/uploads'
+    # Render provides DATABASE_URL automatically for PostgreSQL
+    # For local development, use SQLite
+    database_url = os.getenv('DATABASE_URL')
+    
+    if database_url:
+        # Production: Use provided DATABASE_URL (PostgreSQL on Render)
+        # Fix for Render's postgres:// vs postgresql:// URL
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        SQLALCHEMY_DATABASE_URI = database_url
+        # Use /tmp for uploads on Render (ephemeral but works for temporary storage)
+        UPLOAD_FOLDER = '/tmp/uploads'
     else:
-        # Local development
+        # Local development: Use SQLite
         base_dir = Path(__file__).parent
         db_path = base_dir / 'database.db'
-        SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{db_path}')
+        SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
         UPLOAD_FOLDER = str(base_dir / 'uploads')
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
