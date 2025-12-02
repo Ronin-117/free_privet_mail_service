@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Form Service</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/" class="navbar-brand">
+                📧 Form Service
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="/" class="active">Dashboard</a></li>
+                <li><a href="/submissions">Submissions</a></li>
+                <li><a href="#" id="logout-btn">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
+        <!-- Statistics -->
+        <div class="stats-grid" id="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">🔑</div>
+                <div class="stat-value" id="stat-total-keys">-</div>
+                <div class="stat-label">Total API Keys</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="stat-active-keys">-</div>
+                <div class="stat-label">Active Keys</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📨</div>
+                <div class="stat-value" id="stat-total-submissions">-</div>
+                <div class="stat-label">Total Submissions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value" id="stat-recent-submissions">-</div>
+                <div class="stat-label">Last 7 Days</div>
+            </div>
+        </div>
+
+        <!-- API Keys Section -->
+        <div class="card">
+            <div class="card-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 class="card-title">API Keys</h2>
+                        <p class="card-subtitle">Manage your form submission API keys</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateKeyModal()">
+                        + New API Key
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>API Key</th>
+                                <th>Recipient Email</th>
+                                <th>Usage</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="api-keys-table">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create API Key Modal -->
+    <div id="create-key-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create New API Key</h3>
+                <button class="modal-close" onclick="closeCreateKeyModal()">&times;</button>
+            </div>
+            <form id="create-key-form">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="key-name">Name *</label>
+                        <input type="text" id="key-name" class="form-input" placeholder="e.g., Contact Form" required>
+                        <span class="form-help">A descriptive name for this API key</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="key-email">Recipient Email *</label>
+                        <input type="email" id="key-email" class="form-input" placeholder="you@example.com" required>
+                        <span class="form-help">Email address to receive form submissions</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="key-description">Description</label>
+                        <textarea id="key-description" class="form-textarea"
+                            placeholder="Optional description..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateKeyModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Create API Key
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View API Key Modal -->
+    <div id="view-key-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">API Key Details</h3>
+                <button class="modal-close" onclick="closeViewKeyModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <span>💡</span>
+                    <div>
+                        <strong>Integration Instructions</strong><br>
+                        Use this API key in your HTML form's action attribute.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">API Endpoint</label>
+                    <input type="text" id="api-endpoint" class="form-input" readonly>
+                    <span class="form-help">Use this URL as your form action</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Example HTML Form</label>
+                    <textarea id="example-code" class="form-textarea" readonly
+                        style="font-family: monospace; font-size: 0.75rem;" rows="10"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeViewKeyModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+
+</html>

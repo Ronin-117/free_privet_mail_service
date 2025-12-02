@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submissions - Form Service</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/" class="navbar-brand">
+                📧 Form Service
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/submissions" class="active">Submissions</a></li>
+                <li><a href="#" id="logout-btn">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
+        <div class="card">
+            <div class="card-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 class="card-title">Form Submissions</h2>
+                        <p class="card-subtitle">View and manage all form submissions</p>
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <select id="filter-api-key" class="form-select" style="width: 200px;">
+                            <option value="">All API Keys</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="loadSubmissions()">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>API Key</th>
+                                <th>Data Preview</th>
+                                <th>Files</th>
+                                <th>Email Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="submissions-table">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" class="mt-4" style="display: flex; justify-content: center; gap: 0.5rem;">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- View Submission Modal -->
+    <div id="view-submission-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Submission Details</h3>
+                <button class="modal-close" onclick="closeViewSubmissionModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="submission-details">
+                <!-- Details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="delete-submission-btn">
+                    Delete Submission
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="closeViewSubmissionModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        });
+    </script>
+    <script src="/static/js/submissions.js"></script>
+</body>
+
+</html>
