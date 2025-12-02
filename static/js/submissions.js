@@ -17,9 +17,17 @@ let apiKeys = [];
 
 // API helper function
 async function apiRequest(endpoint, options = {}) {
+    // Get fresh token from localStorage each time
+    const currentToken = localStorage.getItem('token');
+
+    if (!currentToken) {
+        window.location.href = '/login';
+        return;
+    }
+
     const defaultOptions = {
         headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${currentToken}`,
             'Content-Type': 'application/json'
         }
     };
