@@ -586,13 +586,12 @@ def create_default_user(app):
         logger.error(f'Failed to create default user: {str(e)}')
 
 
+# Create app instance for Gunicorn
+env = os.getenv('FLASK_ENV', 'production')
+app = create_app(env)
+
+
 if __name__ == '__main__':
-    # Get environment
-    env = os.getenv('FLASK_ENV', 'development')
-    
-    # Create app
-    app = create_app(env)
-    
-    # Run app
+    # Run app directly (for local development)
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=(env == 'development'))
