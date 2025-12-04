@@ -210,8 +210,8 @@ def create_app(config_name='default'):
             user.last_login = datetime.utcnow()
             db.session.commit()
             
-            # Create access token
-            access_token = create_access_token(identity=user.id)
+            # Create access token - MUST be string, not integer
+            access_token = create_access_token(identity=str(user.id))
             
             return success_response(
                 data={
@@ -236,7 +236,8 @@ def create_app(config_name='default'):
         """
         try:
             user_id = get_jwt_identity()
-            user = User.query.get(user_id)
+            # Convert back to integer since we store it as string in JWT
+            user = User.query.get(int(user_id))
             
             if not user:
                 return error_response('User not found', 404)
