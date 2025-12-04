@@ -42,6 +42,12 @@ class EmailService:
         
         # Resend API Configuration (preferred for production)
         self.resend_api_key = getattr(config, 'RESEND_API_KEY', '')
+        
+        # Debug logging
+        if self.resend_api_key:
+            logger.info(f'Resend API key loaded: {self.resend_api_key[:10]}...')
+        else:
+            logger.warning('No Resend API key found - will use SMTP fallback')
     
     def send_submission_notification(self, recipient_email, api_key_name, form_data, files=None):
         """
