@@ -44,6 +44,17 @@ class Config:
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # Database connection pool settings for stability
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,  # Test connections before using them
+        'pool_recycle': 300,    # Recycle connections after 5 minutes
+        'pool_size': 5,         # Maximum number of connections
+        'max_overflow': 10,     # Maximum overflow connections
+        'connect_args': {
+            'connect_timeout': 10,  # Connection timeout in seconds
+        }
+    }
+    
     # Admin user (created on first run)
     ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@example.com')
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'changeme123')
