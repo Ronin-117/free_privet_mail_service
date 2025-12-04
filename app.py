@@ -41,7 +41,14 @@ def create_app(config_name='default'):
     
     # Initialize extensions
     db.init_app(app)
-    CORS(app, origins=app.config['CORS_ORIGINS'])
+    
+    # Configure CORS with explicit settings
+    CORS(app, 
+         resources={r"/api/*": {"origins": "*"}},
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         supports_credentials=False)
+    
     jwt = JWTManager(app)
     
     # Initialize email service
