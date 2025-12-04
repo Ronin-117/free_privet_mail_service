@@ -258,11 +258,16 @@ class EmailService:
     
     def _send_email(self, msg, recipient):
         """Send the email via SMTP."""
-        with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-            server.starttls()
-            if self.smtp_username and self.smtp_password:
-                server.login(self.smtp_username, self.smtp_password)
-            server.send_message(msg)
+        try:
+            # Add timeout to prevent worker hanging
+            with smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=10) as server:
+                server.starttls()
+                if self.smtp_username and self.smtp_password:
+                    server.login(self.smtp_username, self.smtp_password)
+                server.send_message(msg)
+        except Exception as e:
+            logger.error(f'SMTP error: {str(e)}')
+            raise
     
     def _format_file_size(self, size_bytes):
         """Format file size in human-readable format."""
