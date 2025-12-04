@@ -149,7 +149,7 @@ def create_app(config_name='default'):
                                 mime_type=file.content_type
                             )
                             db.session.add(file_upload)
-                            uploaded_files.append(file_upload.to_dict())
+                            uploaded_files.append(file_upload)  # Pass object, not dict
                             
                         except Exception as e:
                             logger.error(f'File upload error: {str(e)}')
@@ -161,7 +161,7 @@ def create_app(config_name='default'):
                     key_obj.recipient_email,
                     key_obj.name,
                     form_data,
-                    uploaded_files
+                    uploaded_files  # Pass FileUpload objects
                 )
                 submission.email_sent = success
                 if not success:
