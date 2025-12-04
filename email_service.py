@@ -9,7 +9,7 @@ Updated: 2025-12-04 - Added Resend API integration
 
 import smtplib
 import logging
-import requests
+import resend
 import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -71,14 +71,17 @@ class EmailService:
             return False, error_msg
     
     def _send_via_resend(self, recipient_email, api_key_name, form_data, files=None):
-        """Send email via Resend API."""
+        """Send email via Resend API using official SDK."""
         try:
+            # Set API key
+            resend.api_key = self.resend_api_key
+            
             # Prepare email data
             email_data = {
-                'from': f'{self.from_name} <{self.from_email}>',
-                'to': [recipient_email],
-                'subject': f'New Form Submission - {api_key_name}',
-                'html': self._create_html_body(api_key_name, form_data, files)
+                "from": f'{self.from_name} <{self.from_email}>',
+                "to": [recipient_email],
+                "subject": f'New Form Submission - {api_key_name}',
+                "html": self._create_html_body(api_key_name, form_data, files)
             }
             
             # Add file attachments if any
@@ -100,24 +103,11 @@ class EmailService:
                 if attachments:
                     email_data['attachments'] = attachments
             
-            # Send via Resend API
-            response = requests.post(
-                'https://api.resend.com/emails',
-                headers={
-                    'Authorization': f'Bearer {self.resend_api_key}',
-                    'Content-Type': 'application/json'
-                },
-                json=email_data,
-                timeout=30
-            )
+            # Send via Resend SDK
+            response = resend.Emails.send(email_data)
             
-            if response.status_code == 200:
-                logger.info(f'Email sent successfully via Resend to {recipient_email}')
-                return True, None
-            else:
-                error_msg = f'Resend API error: {response.status_code} - {response.text}'
-                logger.error(error_msg)
-                return False, error_msg
+            logger.info(f'Email sent successfully via Resend to {recipient_email}')
+            return True, None
                 
         except Exception as e:
             error_msg = f'Resend error: {str(e)}'
