@@ -147,5 +147,5 @@ class FileUpload(db.Model):
             'stored_filename': self.stored_filename,
             'file_size': self.file_size,
             'mime_type': self.mime_type,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() if self.created_at else datetime.utcnow().isoformat()
         }
