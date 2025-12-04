@@ -70,6 +70,12 @@ class Config:
     # Resend API (preferred for Render - 100% free, no credit card)
     RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
     
+    # Debug: Print to see if key is loaded (will show in Render logs on startup)
+    if RESEND_API_KEY:
+        print(f'✅ RESEND_API_KEY loaded: {RESEND_API_KEY[:10]}...')
+    else:
+        print('❌ RESEND_API_KEY not found in environment variables!')
+    
     # File upload settings
     MAX_FILE_SIZE = int(os.getenv('MAX_FILE_SIZE', 10485760))  # 10MB default
     ALLOWED_EXTENSIONS = set(os.getenv('ALLOWED_EXTENSIONS', 'pdf,doc,docx,txt,png,jpg,jpeg,gif,zip').split(','))
