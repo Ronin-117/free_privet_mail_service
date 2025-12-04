@@ -27,7 +27,12 @@ def jwt_required_custom(fn):
             verify_jwt_in_request()
             return fn(*args, **kwargs)
         except Exception as e:
-            return error_response('Authentication required', 401)
+            # Log the actual error for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'JWT verification failed: {type(e).__name__}: {str(e)}')
+            logger.error(f'Request headers: {dict(request.headers)}')
+            return error_response(f'Authentication required: {str(e)}', 401)
     return wrapper
 
 
