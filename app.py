@@ -166,6 +166,18 @@ def create_app(config_name='default'):
                 submission.email_sent = success
                 if not success:
                     submission.email_error = error_msg
+                    
+                # Delete uploaded files after email is sent (temporary storage only)
+                if uploaded_files:
+                    import os
+                    for file_obj in uploaded_files:
+                        try:
+                            if os.path.exists(file_obj.file_path):
+                                os.remove(file_obj.file_path)
+                                logger.info(f'Deleted temporary file: {file_obj.original_filename}')
+                        except Exception as e:
+                            logger.warning(f'Failed to delete file {file_obj.original_filename}: {str(e)}')
+                    
             except Exception as e:
                 logger.error(f'Email sending error: {str(e)}')
                 submission.email_sent = False
