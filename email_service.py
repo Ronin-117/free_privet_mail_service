@@ -1,12 +1,16 @@
 """
 Email service for sending form submission notifications.
+Now with Resend API support for production use on Render.
 
 Author: AI Assistant
 Created: 2025-12-02
+Updated: 2025-12-04 - Added Resend API integration
 """
 
 import smtplib
 import logging
+import requests
+import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -18,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    """Service for sending email notifications."""
+    """Service for sending email notifications via Resend API or SMTP."""
     
     def __init__(self, config):
         """
@@ -27,13 +31,17 @@ class EmailService:
         Args:
             config: Flask configuration object
         """
+        # SMTP Configuration (fallback)
         self.smtp_host = getattr(config, 'SMTP_HOST', 'smtp.gmail.com')
         self.smtp_port = getattr(config, 'SMTP_PORT', 587)
         self.smtp_username = getattr(config, 'SMTP_USERNAME', '')
         self.smtp_password = getattr(config, 'SMTP_PASSWORD', '')
-        self.from_email = getattr(config, 'SMTP_FROM_EMAIL', '')
+        self.from_email = getattr(config, 'SMTP_FROM_EMAIL', 'onboarding@resend.dev')
         self.from_name = getattr(config, 'SMTP_FROM_NAME', 'Form Service')
         self.app_url = getattr(config, 'APP_URL', 'http://localhost:5000')
+        
+        # Resend API Configuration (preferred for production)
+        self.resend_api_key = getattr(config, 'RESEND_API_KEY', '')
     
     def send_submission_notification(self, recipient_email, api_key_name, form_data, files=None):
         """
@@ -43,11 +51,81 @@ class EmailService:
             recipient_email: Email address to send notification to
             api_key_name: Name of the API key used
             form_data: Dictionary of form data
-            files: List of file dictionaries (optional)
+            files: List of FileUpload objects (optional)
             
         Returns:
             tuple: (success: bool, error_message: str or None)
         """
+        try:
+            # Try Resend first if configured
+            if self.resend_api_key:
+                logger.info('Attempting to send email via Resend API')
+                return self._send_via_resend(recipient_email, api_key_name, form_data, files)
+            # Fall back to SMTP
+            else:
+                logger.info('Attempting to send email via SMTP')
+                return self._send_via_smtp(recipient_email, api_key_name, form_data, files)
+        except Exception as e:
+            error_msg = f'Failed to send email: {str(e)}'
+            logger.error(error_msg)
+            return False, error_msg
+    
+    def _send_via_resend(self, recipient_email, api_key_name, form_data, files=None):
+        """Send email via Resend API."""
+        try:
+            # Prepare email data
+            email_data = {
+                'from': f'{self.from_name} <{self.from_email}>',
+                'to': [recipient_email],
+                'subject': f'New Form Submission - {api_key_name}',
+                'html': self._create_html_body(api_key_name, form_data, files)
+            }
+            
+            # Add file attachments if any
+            if files:
+                attachments = []
+                for file_obj in files:
+                    try:
+                        file_path = Path(file_obj.file_path)
+                        if file_path.exists():
+                            with open(file_path, 'rb') as f:
+                                content = base64.b64encode(f.read()).decode()
+                                attachments.append({
+                                    'filename': file_obj.original_filename,
+                                    'content': content
+                                })
+                    except Exception as e:
+                        logger.warning(f'Failed to attach file {file_obj.original_filename}: {str(e)}')
+                
+                if attachments:
+                    email_data['attachments'] = attachments
+            
+            # Send via Resend API
+            response = requests.post(
+                'https://api.resend.com/emails',
+                headers={
+                    'Authorization': f'Bearer {self.resend_api_key}',
+                    'Content-Type': 'application/json'
+                },
+                json=email_data,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                logger.info(f'Email sent successfully via Resend to {recipient_email}')
+                return True, None
+            else:
+                error_msg = f'Resend API error: {response.status_code} - {response.text}'
+                logger.error(error_msg)
+                return False, error_msg
+                
+        except Exception as e:
+            error_msg = f'Resend error: {str(e)}'
+            logger.error(error_msg)
+            return False, error_msg
+    
+    def _send_via_smtp(self, recipient_email, api_key_name, form_data, files=None):
+        """Send email via SMTP (fallback method)."""
         try:
             # Create message
             msg = MIMEMultipart('alternative')
@@ -70,8 +148,8 @@ class EmailService:
             
             # Attach files if any
             if files:
-                for file_info in files:
-                    self._attach_file(msg, file_info)
+                for file_obj in files:
+                    self._attach_file(msg, file_obj)
             
             # Send email
             self._send_email(msg, recipient_email)
@@ -183,8 +261,8 @@ class EmailService:
                     <h3 style="color: #667eea; margin-bottom: 15px;">📎 Attached Files</h3>
             """
             for file_obj in files:
-                filename = getattr(file_obj, 'original_filename', file_obj.get('original_filename', 'file') if isinstance(file_obj, dict) else 'file')
-                filesize = getattr(file_obj, 'file_size', file_obj.get('file_size', 0) if isinstance(file_obj, dict) else 0)
+                filename = getattr(file_obj, 'original_filename', 'file')
+                filesize = getattr(file_obj, 'file_size', 0)
                 html += f"""
                     <div class="file-item">
                         <span class="file-icon">📄</span>
@@ -222,8 +300,8 @@ class EmailService:
         if files:
             text += f"\nAttached Files ({len(files)}):\n"
             for file_obj in files:
-                filename = getattr(file_obj, 'original_filename', file_obj.get('original_filename', 'file') if isinstance(file_obj, dict) else 'file')
-                filesize = getattr(file_obj, 'file_size', file_obj.get('file_size', 0) if isinstance(file_obj, dict) else 0)
+                filename = getattr(file_obj, 'original_filename', 'file')
+                filesize = getattr(file_obj, 'file_size', 0)
                 text += f"- {filename} ({self._format_file_size(filesize)})\n"
         
         text += f"\n{'-' * 50}\n"
@@ -234,13 +312,8 @@ class EmailService:
     def _attach_file(self, msg, file_obj):
         """Attach a file to the email message."""
         try:
-            # Handle both FileUpload objects and dictionaries
-            if hasattr(file_obj, 'file_path'):
-                file_path = Path(file_obj.file_path)
-                original_filename = file_obj.original_filename
-            else:
-                file_path = Path(file_obj.get('file_path', ''))
-                original_filename = file_obj.get('original_filename', 'file')
+            file_path = Path(file_obj.file_path)
+            original_filename = file_obj.original_filename
             
             if file_path.exists():
                 with open(file_path, 'rb') as f:
@@ -253,8 +326,7 @@ class EmailService:
                     )
                     msg.attach(part)
         except Exception as e:
-            filename = getattr(file_obj, 'original_filename', file_obj.get('original_filename', 'unknown') if isinstance(file_obj, dict) else 'unknown')
-            logger.error(f'Failed to attach file {filename}: {str(e)}')
+            logger.error(f'Failed to attach file {file_obj.original_filename}: {str(e)}')
     
     def _send_email(self, msg, recipient):
         """Send the email via SMTP."""

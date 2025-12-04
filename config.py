@@ -67,8 +67,8 @@ class Config:
     SMTP_FROM_EMAIL = os.getenv('SMTP_FROM_EMAIL', '')
     SMTP_FROM_NAME = os.getenv('SMTP_FROM_NAME', 'Form Service')
     
-    # SendGrid alternative
-    SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
+    # Resend API (preferred for Render - 100% free, no credit card)
+    RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
     
     # File upload settings
     MAX_FILE_SIZE = int(os.getenv('MAX_FILE_SIZE', 10485760))  # 10MB default
