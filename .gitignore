@@ -130,26 +130,6 @@ dist
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-
-# Vite logs files
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-build/
-develop-eggs/
-downloads/
 eggs/
 .eggs/
 lib/
