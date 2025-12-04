@@ -211,17 +211,6 @@ class EmailService:
         return html
     
     def _create_text_body(self, api_key_name, form_data, files):
-        """Create plain text email body."""
-        text = f"New Form Submission\n"
-        text += f"From: {api_key_name}\n"
-        text += f"{'-' * 50}\n\n"
-        
-    def _attach_file(self, msg, file_obj):
-        """Attach a file to the email message."""
-        try:
-            # Handle both FileUpload objects and dictionaries
-            if hasattr(file_obj, 'file_path'):
-                # It's a FileUpload object
                 file_path = Path(file_obj.file_path)
                 original_filename = file_obj.original_filename
             else:
