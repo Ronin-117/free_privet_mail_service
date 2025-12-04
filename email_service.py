@@ -231,7 +231,7 @@ class EmailService:
         
         return text
     
-    def _attach_file(self, msg, file_info):
+    def _attach_file(self, msg, file_obj):
         """Attach a file to the email message."""
         try:
             # Handle both FileUpload objects and dictionaries
