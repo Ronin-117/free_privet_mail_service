@@ -182,16 +182,14 @@ class EmailService:
                 <div class="files">
                     <h3 style="color: #667eea; margin-bottom: 15px;">📎 Attached Files</h3>
             """
-            for file_obj in files:
-                filename = getattr(file_obj, 'original_filename', file_obj.get('original_filename', 'file'))
-                filesize = getattr(file_obj, 'file_size', file_obj.get('file_size', 0))
+            for file_info in files:
                 html += f"""
                     <div class="file-item">
                         <span class="file-icon">📄</span>
                         <div>
-                            <strong>{filename}</strong>
+                            <strong>{file_info['original_filename']}</strong>
                             <div style="font-size: 12px; color: #666;">
-                                {self._format_file_size(filesize)}
+                                {self._format_file_size(file_info['file_size'])}
                             </div>
                         </div>
                     </div>
@@ -211,13 +209,28 @@ class EmailService:
         return html
     
     def _create_text_body(self, api_key_name, form_data, files):
-                file_path = Path(file_obj.file_path)
-                original_filename = file_obj.original_filename
-            else:
-                # It's a dictionary
-                file_path = Path(file_obj.get('file_path', ''))
-                original_filename = file_obj.get('original_filename', 'file')
-            
+        """Create plain text email body."""
+        text = f"New Form Submission\n"
+        text += f"From: {api_key_name}\n"
+        text += f"{'-' * 50}\n\n"
+        
+        for key, value in form_data.items():
+            text += f"{key}:\n{value}\n\n"
+        
+        if files:
+            text += f"\nAttached Files ({len(files)}):\n"
+            for file_info in files:
+                text += f"- {file_info['original_filename']} ({self._format_file_size(file_info['file_size'])})\n"
+        
+        text += f"\n{'-' * 50}\n"
+        text += f"View dashboard: {self.app_url}\n"
+        
+        return text
+    
+    def _attach_file(self, msg, file_info):
+        """Attach a file to the email message."""
+        try:
+            file_path = Path(file_info['file_path'])
             if file_path.exists():
                 with open(file_path, 'rb') as f:
                     part = MIMEBase('application', 'octet-stream')
@@ -225,12 +238,11 @@ class EmailService:
                     encoders.encode_base64(part)
                     part.add_header(
                         'Content-Disposition',
-                        f'attachment; filename= {original_filename}'
+                        f'attachment; filename= {file_info["original_filename"]}'
                     )
                     msg.attach(part)
         except Exception as e:
-            filename = getattr(file_obj, 'original_filename', file_obj.get('original_filename', 'unknown'))
-            logger.error(f'Failed to attach file {filename}: {str(e)}')
+            logger.error(f'Failed to attach file {file_info["original_filename"]}: {str(e)}')
     
     def _send_email(self, msg, recipient):
         """Send the email via SMTP."""
