@@ -16,6 +16,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from config import config
 from models import db, User, ApiKey, FormSubmission, FileUpload
 from email_service import EmailService
+from keep_alive import KeepAliveService
 from auth import jwt_required_custom
 from utils import (
     allowed_file, save_uploaded_file, success_response, 
@@ -47,19 +48,6 @@ def create_app(config_name='default'):
          resources={r"/api/*": {"origins": "*"}},
          allow_headers=["Content-Type", "Authorization"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-         supports_credentials=False)
-    
-    jwt = JWTManager(app)
-    
-    # Initialize email service
-    email_service = EmailService(app.config)
-    
-    # Create database tables and default user
-    with app.app_context():
-        db.create_all()
-        create_default_user(app)
-    
-    # Error handlers
     @app.errorhandler(404)
     def not_found(e):
         return error_response('Resource not found', 404)
