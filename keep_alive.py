@@ -47,12 +47,18 @@ class KeepAliveService:
         interval = random.randint(240, 360)
         logger.info(f'⏰ Next keep-alive ping scheduled in {interval} seconds ({interval/60:.1f} minutes)')
         
-        # Schedule the ping
+        # Remove existing job if any
+        if self.scheduler.get_job('keep_alive_ping'):
+            self.scheduler.remove_job('keep_alive_ping')
+        
+        # Schedule the ping using interval trigger
+        from datetime import datetime, timedelta
+        run_time = datetime.now() + timedelta(seconds=interval)
+        
         self.scheduler.add_job(
             self.ping_and_reschedule,
             'date',
-            run_date=None,
-            seconds=interval,
+            run_date=run_time,
             id='keep_alive_ping',
             replace_existing=True
         )
