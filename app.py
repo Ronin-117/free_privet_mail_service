@@ -48,6 +48,27 @@ def create_app(config_name='default'):
          resources={r"/api/*": {"origins": "*"}},
          allow_headers=["Content-Type", "Authorization"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         supports_credentials=False)
+    
+    jwt = JWTManager(app)
+    
+    # Initialize email service
+    email_service = EmailService(app.config)
+    app.email_service = email_service
+    
+    # Initialize and start keep-alive service (only in production)
+    if app.config.get('FLASK_ENV') == 'production':
+        keep_alive = KeepAliveService(app.config['APP_URL'])
+        keep_alive.start()
+        app.keep_alive = keep_alive
+        logger.info('Keep-alive service initialized for production')
+    
+    # Create database tables and default user
+    with app.app_context():
+        db.create_all()
+        create_default_user(app)
+    
+    # Error handlers
     @app.errorhandler(404)
     def not_found(e):
         return error_response('Resource not found', 404)
