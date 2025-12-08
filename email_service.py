@@ -11,6 +11,8 @@ import smtplib
 import logging
 import resend
 import base64
+import socket
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -77,10 +79,30 @@ class EmailService:
             logger.error(error_msg)
             return False, error_msg
     
+    
+    def _warm_up_network(self):
+        """
+        Perform a lightweight network connection to 'wake up' the network stack.
+        This resolves DNS and establishes a TCP connection without sending data.
+        Does not consume API credits.
+        """
+        try:
+            logger.info('Network warmup: Connecting to api.resend.com...')
+            sock = socket.create_connection(("api.resend.com", 443), timeout=3)
+            sock.close()
+            logger.info('✅ Network warmup successful')
+            return True
+        except Exception as e:
+            logger.warning(f'⚠️ Network warmup failed (proceeding anyway): {str(e)}')
+            return False
+
     def _send_via_resend(self, recipient_email, api_key_name, form_data, files=None):
         """Send email via Resend API using official SDK."""
         try:
-            # Set API key
+            # Step 1: Warm up the network connection
+            self._warm_up_network()
+            
+            # Step 2: Set API key
             resend.api_key = self.resend_api_key
             
             # Prepare email data
