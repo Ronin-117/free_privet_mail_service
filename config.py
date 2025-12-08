@@ -75,7 +75,13 @@ class Config:
         print(f'✅ RESEND_API_KEY loaded: {RESEND_API_KEY[:10]}...')
     else:
         print('❌ RESEND_API_KEY not found in environment variables!')
+
+    # Resend Test Email (Recipient for warmup/test emails - REQUIRED for Resend Free Tier)
+    # Must be the same email you signed up with at Resend.com
+    RESEND_TEST_EMAIL = os.getenv('RESEND_TEST_EMAIL', '')
     
+    # File upload settings
+
     # File upload settings
     MAX_FILE_SIZE = int(os.getenv('MAX_FILE_SIZE', 10485760))  # 10MB default
     ALLOWED_EXTENSIONS = set(os.getenv('ALLOWED_EXTENSIONS', 'pdf,doc,docx,txt,png,jpg,jpeg,gif,zip').split(','))

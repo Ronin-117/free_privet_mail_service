@@ -77,7 +77,15 @@ def create_app(config_name='default'):
                     import time
                     time.sleep(10)
                     
-                    admin_email = app.config.get('ADMIN_EMAIL') or 'njmailservices@gmail.com'
+                    # ALERT: On Resend Free Tier without a domain, you can ONLY send to your signup email.
+                    # We use the configured test email (must match Resend account email) or fallback to admin email.
+                    admin_email = app.config.get('RESEND_TEST_EMAIL')
+                    
+                    if not admin_email:
+                        # Fallback if not set (might fail on free tier if not the signup email)
+                        admin_email = app.config.get('ADMIN_EMAIL') or 'njmailservices@gmail.com'
+                        logger.warning('⚠️ RESEND_TEST_EMAIL not set! Using Admin/Default email (might fail on Resend Free Tier)')
+                    
                     logger.info(f'🚀 Sending startup self-test email to {admin_email}...')
                     
                     # Create simple dummy data
