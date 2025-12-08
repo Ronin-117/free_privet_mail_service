@@ -62,6 +62,48 @@ def create_app(config_name='default'):
         keep_alive.start()
         app.keep_alive = keep_alive
         logger.info('Keep-alive service initialized for production')
+        
+        # ---------------------------------------------------------
+        # STARTUP SELF-TEST EMAIL ("Sacrificial Email")
+        # ---------------------------------------------------------
+        # Sends a single email to Admin on startup to "warm up" the IP 
+        # and clear any greylisting/cold-start checks from Gmail/Outlook.
+        from threading import Thread
+        
+        def send_startup_test():
+            with app.app_context():
+                try:
+                    # Wait 10 seconds to let the server fully boot and network stabilize
+                    import time
+                    time.sleep(10)
+                    
+                    admin_email = app.config.get('ADMIN_EMAIL') or 'njmailservices@gmail.com'
+                    logger.info(f'🚀 Sending startup self-test email to {admin_email}...')
+                    
+                    # Create simple dummy data
+                    test_data = {
+                        'Status': 'Server Online',
+                        'Time': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
+                        'Message': 'This is a self-test email to warm up the IP address.'
+                    }
+                    
+                    # Send email
+                    success, error = email_service.send_submission_notification(
+                        recipient_email=admin_email,
+                        api_key_name='SYSTEM_STARTUP',
+                        form_data=test_data
+                    )
+                    
+                    if success:
+                        logger.info('✅ Startup self-test email sent successfully!')
+                    else:
+                        logger.warning(f'⚠️ Startup self-test email failed: {error}')
+                        
+                except Exception as e:
+                    logger.error(f'❌ Startup self-test error: {str(e)}')
+
+        # Run in background thread to not block startup
+        Thread(target=send_startup_test, daemon=True).start()
     
     # Create database tables and default user
     with app.app_context():
